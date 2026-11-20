@@ -1,0 +1,17 @@
+{
+  "transactions": 5075,
+  "fraud": 75,
+  "client_ms": {
+    "p50": 9.03,
+    "p95": 12.74,
+    "p99": 15.49
+  },
+  "server_ms": {
+    "p50": 6.53,
+    "p95": 9.69,
+    "p99": 11.94
+  },
+  "throughput_per_s_single_client": 104.9,
+  "alerts": 58,
+  "fraud_alerted": 55
+}

@@ -1,0 +1,97 @@
+{
+  "data": {
+    "train": {
+      "transactions": 170885,
+      "fraud": 360,
+      "hours": [
+        0.0,
+        33.4
+      ]
+    },
+    "valid": {
+      "transactions": 56961,
+      "fraud": 57,
+      "hours": [
+        33.4,
+        40.3
+      ]
+    },
+    "test": {
+      "transactions": 56961,
+      "fraud": 75,
+      "hours": [
+        40.3,
+        48.0
+      ]
+    }
+  },
+  "xgboost": {
+    "model": "xgboost",
+    "test_average_precision": 0.7681,
+    "test_average_precision_95ci": [
+      0.665,
+      0.858
+    ],
+    "test_roc_auc": 0.9768,
+    "valid_average_precision": 0.7829,
+    "alert_rule_precision_80%_on_valid": {
+      "valid": {
+        "threshold": 0.298951,
+        "alerts": 55,
+        "fraud_caught": 44,
+        "fraud_total": 57,
+        "precision": 0.8,
+        "recall": 0.772,
+        "alerts_per_10k_transactions": 9.66,
+        "fraud_amount_caught_share": 0.634
+      },
+      "test": {
+        "threshold": 0.298951,
+        "alerts": 69,
+        "fraud_caught": 55,
+        "fraud_total": 75,
+        "precision": 0.797,
+        "recall": 0.733,
+        "alerts_per_10k_transactions": 12.11,
+        "fraud_amount_caught_share": 0.525
+      }
+    },
+    "trees": 285
+  },
+  "logistic_regression": {
+    "model": "logistic regression",
+    "test_average_precision": 0.6884,
+    "test_average_precision_95ci": [
+      0.571,
+      0.79
+    ],
+    "test_roc_auc": 0.9759,
+    "valid_average_precision": 0.6198,
+    "alert_rule_precision_80%_on_valid": {
+      "valid": {
+        "threshold": 0.675393,
+        "alerts": 23,
+        "fraud_caught": 19,
+        "fraud_total": 57,
+        "precision": 0.826,
+        "recall": 0.333,
+        "alerts_per_10k_transactions": 4.04,
+        "fraud_amount_caught_share": 0.244
+      },
+      "test": {
+        "threshold": 0.675393,
+        "alerts": 42,
+        "fraud_caught": 34,
+        "fraud_total": 75,
+        "precision": 0.81,
+        "recall": 0.453,
+        "alerts_per_10k_transactions": 7.37,
+        "fraud_amount_caught_share": 0.054
+      }
+    }
+  },
+  "top_reason_on_test_alerts": {
+    "V10": 52,
+    "V14": 17
+  }
+}
