@@ -11,9 +11,10 @@ import json
 import time
 from pathlib import Path
 
-import data
 import httpx
 import numpy as np
+
+import data
 
 OUT = Path(__file__).resolve().parent / "results"
 

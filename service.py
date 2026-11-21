@@ -12,8 +12,9 @@ from pathlib import Path
 
 import pandas as pd
 from fastapi import FastAPI
-from model import Scorer
 from pydantic import BaseModel, Field
+
+from model import Scorer
 
 MODEL_DIR = Path(os.environ.get("FRAUD_MODEL_DIR", Path(__file__).resolve().parent / "model"))
 scorer = Scorer.load(MODEL_DIR)

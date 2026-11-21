@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[0]
 RAW = Path(os.environ.get("ULB_DIR", ROOT / "data" / "raw" / "ulb_fraud"))
 URL = "https://storage.googleapis.com/download.tensorflow.org/data/creditcard.csv"
 SHA256 = "76274b691b16a6c49d3f159c883398e03ccd6d1ee12d9d8ee38f4b4b98551a89"

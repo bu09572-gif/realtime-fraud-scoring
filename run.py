@@ -7,14 +7,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import data
-import model
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, roc_auc_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+
+import data
+import model
 
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "results"

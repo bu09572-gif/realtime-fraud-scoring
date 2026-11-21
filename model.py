@@ -13,8 +13,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from data import FEATURES
 from sklearn.metrics import precision_recall_curve
+
+from data import FEATURES
 
 PARAMS = {"objective": "binary:logistic", "eval_metric": "aucpr", "tree_method": "hist", "max_depth": 4,
           "learning_rate": 0.05, "subsample": 0.8, "colsample_bytree": 0.8, "min_child_weight": 1,

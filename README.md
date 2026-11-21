@@ -1,5 +1,7 @@
 # Real-Time Card Fraud Scoring with SHAP Explanations
 
+[![tests](https://github.com/bu09572-gif/realtime-fraud-scoring/actions/workflows/tests.yml/badge.svg)](https://github.com/bu09572-gif/realtime-fraud-scoring/actions/workflows/tests.yml)
+
 A fraud model behind an HTTP API. Each card transaction gets a fraud probability, an alert decision and the three features that pushed its score the most. It is trained and tested on real card transactions, split by time the way it would run in production: train on the past, set the alert rule on the next period, then test on the latest period with nothing changed.
 
 ## Data
@@ -73,3 +75,7 @@ uvicorn service:app --port 8000 &
 python replay.py --n 5000           # latency over HTTP
 pytest -q test_fraud.py
 ```
+
+---
+
+Part of my [AI/ML and data engineering portfolio](https://github.com/bu09572-gif/ai-ml-portfolio), where every project uses real public data and free, open-source tools.

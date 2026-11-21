@@ -1,9 +1,10 @@
 """Tests on the real ULB data and the committed model."""
-import data
-import model
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
+
+import data
+import model
 
 
 @pytest.fixture(scope="module")
