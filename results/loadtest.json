@@ -1,0 +1,37 @@
+{
+  "where": "github-actions ubuntu-latest",
+  "cpus": 4,
+  "cost_per_hour_usd": 0.0416,
+  "levels": [
+    {
+      "concurrency": 1,
+      "requests": 1967,
+      "errors": 0,
+      "throughput_per_s": 98.6,
+      "p50_ms": 9.81,
+      "p95_ms": 11.22,
+      "p99_ms": 13.25,
+      "usd_per_million_predictions": 0.117
+    },
+    {
+      "concurrency": 4,
+      "requests": 2121,
+      "errors": 0,
+      "throughput_per_s": 106.0,
+      "p50_ms": 37.21,
+      "p95_ms": 48.56,
+      "p99_ms": 59.52,
+      "usd_per_million_predictions": 0.109
+    },
+    {
+      "concurrency": 16,
+      "requests": 2103,
+      "errors": 0,
+      "throughput_per_s": 104.8,
+      "p50_ms": 154.24,
+      "p95_ms": 209.39,
+      "p99_ms": 247.44,
+      "usd_per_million_predictions": 0.11
+    }
+  ]
+}
