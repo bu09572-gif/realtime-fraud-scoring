@@ -9,6 +9,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
   packages: write
@@ -83,7 +87,7 @@ jobs:
           assert "fraud_predictions_total" in m and "fraud_model_info" in m
           PY
       - name: Load test (GitHub-hosted runner, 4 vCPU)
-        run: LOADTEST_LABEL="github-actions ubuntu-latest" python loadtest.py --concurrency 1 4 16 --seconds 20
+        run: LOADTEST_LABEL="github-actions ubuntu-latest" python loadtest.py --concurrency 1 4 16 --batch 10 100 --seconds 20
       - run: docker logs api | tail -20
         if: always()
       - uses: actions/upload-artifact@v4
