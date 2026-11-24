@@ -1,0 +1,61 @@
+# Runs the whole stack (API + Prometheus + Grafana) on a GitHub runner, streams the real test period
+# into it for a few minutes, then saves a dashboard screenshot and what Prometheus saw.
+# Start it from the Actions tab, or by changing ops/stack-demo-request.txt.
+name: stack-demo
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ["ops/stack-demo-request.txt"]
+
+permissions:
+  contents: write
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - name: Start API, Prometheus and Grafana
+        run: |
+          docker compose up -d --build api prometheus grafana
+          for i in $(seq 60); do curl -sf localhost:8000/health && break; sleep 2; done
+          for i in $(seq 60); do curl -sf localhost:3000/api/health && break; sleep 2; done
+      - name: Stream the test period (about 6 minutes at 60 transactions per second)
+        run: |
+          pip install -r requirements-serve.txt httpx playwright
+          python replay.py --n 0 --rate 60 > /tmp/replay.log &
+          sleep 360
+      - name: Dashboard screenshot and Prometheus readings
+        run: |
+          python -m playwright install --with-deps chromium
+          python - <<'PY'
+          import json, httpx
+          from playwright.sync_api import sync_playwright
+          q = lambda e: httpx.get("http://localhost:9090/api/v1/query", params={"query": e}).json()["data"]["result"]
+          out = {
+            "predictions_per_s": q("sum(rate(fraud_predictions_total[1m]))"),
+            "p95_latency_s": q('histogram_quantile(0.95, sum(rate(fraud_request_seconds_bucket{endpoint="/score"}[5m])) by (le))'),
+            "alerts_per_10k": q('1e4 * sum(rate(fraud_predictions_total{alert="true"}[5m])) / sum(rate(fraud_predictions_total[5m]))'),
+            "score_psi": q('fraud_feature_psi{feature="score"}'),
+            "features_psi_over_0.25": q('count(fraud_feature_psi{feature!~"score|hour"} > 0.25)'),
+            "alerts_firing": [a["labels"]["alertname"] + ":" + a["state"] for a in httpx.get("http://localhost:9090/api/v1/alerts").json()["data"]["alerts"]],
+          }
+          json.dump(out, open("results/stack_demo.json", "w"), indent=2); print(json.dumps(out, indent=2))
+          with sync_playwright() as p:
+              b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1600, "height": 1000}, device_scale_factor=1)
+              pg.goto("http://localhost:3000/d/fraud-scoring/fraud-scoring?orgId=1&kiosk&from=now-8m&to=now")
+              pg.wait_for_timeout(8000); pg.screenshot(path="results/dashboard.png", full_page=True); b.close()
+          PY
+      - run: docker compose logs api | tail -30
+        if: always()
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/stack_demo.json results/dashboard.png
+          git commit -m "Stack demo: dashboard screenshot [skip ci]" || echo "nothing to commit"
+          git pull --rebase && git push
