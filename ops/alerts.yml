@@ -1,0 +1,33 @@
+groups:
+  - name: fraud-api
+    rules:
+      - alert: ScoringLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(fraud_request_seconds_bucket{endpoint="/score"}[5m])) by (le)) > 0.05
+        for: 5m
+        labels: { severity: page }
+        annotations: { summary: "p95 /score latency above 50 ms for 5 minutes" }
+      - alert: AlertRateOutOfRange
+        # the alert rule gave 12 alerts per 10,000 transactions on validation and test; 3x either way is unusual
+        expr: >
+          (sum(rate(fraud_predictions_total{alert="true"}[30m])) / sum(rate(fraud_predictions_total[30m])) > 0.0036)
+          or (sum(rate(fraud_predictions_total{alert="true"}[30m])) / sum(rate(fraud_predictions_total[30m])) < 0.0004)
+        for: 15m
+        labels: { severity: ticket }
+        annotations: { summary: "Alert rate is far from the 12 per 10,000 seen at training time" }
+      - alert: ScoreDrift
+        expr: fraud_feature_psi{feature="score"} > 0.25
+        for: 30m
+        labels: { severity: ticket }
+        annotations: { summary: "Distribution of fraud scores moved (PSI > 0.25): check inputs, consider retraining" }
+      - alert: FeatureDrift
+        # info only: on this data 6 to 11 features pass 0.25 every hour of day 2 while the score stays
+        # stable (results/drift.json), so feature PSI is for diagnosis, not for paging
+        expr: count(fraud_feature_psi{feature!~"score|hour"} > 0.25) >= 3
+        for: 30m
+        labels: { severity: info }
+        annotations: { summary: "3 or more input features drifted (PSI > 0.25)" }
+      - alert: ApiErrors
+        expr: sum(rate(fraud_request_errors_total{status=~"5.."}[5m])) > 0
+        for: 5m
+        labels: { severity: page }
+        annotations: { summary: "The API is returning server errors" }

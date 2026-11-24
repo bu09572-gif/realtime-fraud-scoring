@@ -1,0 +1,106 @@
+# CI/CD: test -> retrain and check the gate -> build the serving image -> smoke test the container
+# -> load test it -> push to GitHub Container Registry (main only) and commit the load test numbers.
+name: cicd
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["results/loadtest.json", "**.md"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+  COST_PER_HOUR_USD: "0.0416"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: ruff check .
+      - run: pytest -q
+
+  retrain:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Training pipeline (data checks, MLflow runs, promotion gate)
+        run: |
+          cp model/card.json /tmp/committed_card.json
+          python pipeline.py
+      - name: The committed model must be reproducible
+        run: |
+          python - <<'PY'
+          import json
+          a = json.load(open("/tmp/committed_card.json"))["metrics"]; b = json.load(open("model/card.json"))["metrics"]
+          for k in ("valid_ap", "test_ap"):
+              print(k, a[k], b[k]); assert abs(a[k] - b[k]) < 0.005, k
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mlflow-run
+          path: |
+            mlflow.db
+            mlruns/
+            results/pipeline_run.json
+
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: docker build -t fraud-api:ci .
+      - name: Start the container
+        run: |
+          docker run -d --name api -p 8000:8000 -e COST_PER_HOUR_USD=$COST_PER_HOUR_USD fraud-api:ci
+          for i in $(seq 30); do curl -sf localhost:8000/health && break; sleep 1; done
+      - name: Smoke test
+        run: |
+          pip install -r requirements-serve.txt httpx
+          python - <<'PY'
+          import httpx, data
+          t = data.load().query("split == 'test' and Class == 1").iloc[0]
+          body = {"transaction_id": "smoke", "time_s": float(t.Time), "amount": float(t.Amount),
+                  "pca": [float(t[f"V{i}"]) for i in range(1, 29)]}
+          r = httpx.post("http://localhost:8000/score", json=body).json(); print(r)
+          assert r["alert"] is True and len(r["reasons"]) == 3
+          assert httpx.post("http://localhost:8000/score", json={**body, "amount": -1}).status_code == 422
+          m = httpx.get("http://localhost:8000/metrics").text
+          assert "fraud_predictions_total" in m and "fraud_model_info" in m
+          PY
+      - name: Load test (GitHub-hosted runner, 4 vCPU)
+        run: LOADTEST_LABEL="github-actions ubuntu-latest" python loadtest.py --concurrency 1 4 16 --seconds 20
+      - run: docker logs api | tail -20
+        if: always()
+      - uses: actions/upload-artifact@v4
+        with: { name: loadtest, path: results/loadtest.json }
+      - name: Push image to ghcr.io (main only)
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker tag fraud-api:ci $IMAGE:${{ github.sha }}
+          docker tag fraud-api:ci $IMAGE:latest
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+      - name: Commit load test numbers (main only)
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/loadtest.json
+          git commit -m "Load test results [skip ci]" || echo "nothing to commit"
+          git pull --rebase && git push

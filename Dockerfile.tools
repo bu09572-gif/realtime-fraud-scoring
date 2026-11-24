@@ -1,0 +1,6 @@
+# Image for the traffic replayer and load test (downloads the real ULB data at run time).
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements-serve.txt .
+RUN pip install --no-cache-dir -r requirements-serve.txt httpx==0.28.1
+COPY data.py replay.py loadtest.py ./

@@ -11,3 +11,5 @@ matplotlib>=3.8
 requests>=2.31
 pytest>=8
 ruff>=0.5
+prometheus-client>=0.20
+mlflow>=2.16

@@ -28,6 +28,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", default="http://127.0.0.1:8000")
     ap.add_argument("--n", type=int, default=5000, help="test transactions to replay (0 = all)")
+    ap.add_argument("--rate", type=float, default=0, help="transactions per second (0 = as fast as possible)")
     a = ap.parse_args(argv)
     test = data.load().query("split == 'test'")
     if a.n:
@@ -37,6 +38,8 @@ def main(argv=None):
     with httpx.Client(base_url=a.url, timeout=10) as c:
         c.get("/health").raise_for_status()
         for row in test.itertuples():
+            if a.rate and lat:
+                time.sleep(max(0.0, 1 / a.rate - lat[-1] / 1000))
             t0 = time.perf_counter()
             r = c.post("/score", json=payload(row))
             lat.append((time.perf_counter() - t0) * 1000)

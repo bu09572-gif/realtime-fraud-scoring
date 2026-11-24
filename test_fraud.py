@@ -59,3 +59,38 @@ def test_api_rejects_bad_input():
     client = TestClient(service.app)
     assert client.post("/score", json={"time_s": 1, "amount": -5, "pca": [0] * 28}).status_code == 422
     assert client.post("/score", json={"time_s": 1, "amount": 5, "pca": [0] * 27}).status_code == 422
+
+
+# ---------- MLOps ----------
+def test_psi_is_zero_for_same_data_and_large_for_a_shift():
+    import pandas as pd
+
+    from monitoring import psi, reference
+    rng = np.random.default_rng(0)
+    x = pd.DataFrame({"a": rng.normal(size=20000)})
+    ref = reference(x, ["a"])["a"]
+    assert psi(ref, rng.normal(size=20000)) < 0.01
+    assert psi(ref, rng.normal(loc=1.0, size=20000)) > 0.25
+
+
+def test_gate_blocks_a_worse_challenger():
+    import pipeline
+    champ = {"valid_ap": 0.78, "valid": {"precision": 0.8, "fraud_amount_caught_share": 0.63}, "p95_ms": 5}
+    worse = {"valid_ap": 0.75, "valid": {"precision": 0.8, "fraud_amount_caught_share": 0.60}, "p95_ms": 5}
+    ok, why = pipeline.gate(worse, champ)
+    assert not ok and len(why) == 2
+    assert pipeline.gate(champ, champ)[0]
+
+
+def test_batch_metrics_and_drift_endpoints(df):
+    import replay
+    import service
+    client = TestClient(service.app)
+    rows = df[df.split == "test"].head(20)
+    r = client.post("/score/batch", json={"transactions": [replay.payload(x) for x in rows.itertuples()]})
+    assert r.status_code == 200 and len(r.json()["results"]) == 20
+    m = client.get("/metrics").text
+    assert "fraud_request_seconds_bucket" in m and 'fraud_predictions_total{alert="false"}' in m
+    d = client.get("/monitoring/drift").json()
+    assert d["n"] >= 20 and "score" in d["psi"]
+    assert client.get("/model").json()["name"] == "fraud-xgb"

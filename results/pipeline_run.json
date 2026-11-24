@@ -1,0 +1,102 @@
+{
+  "ingest": {
+    "rows": 284807,
+    "source_sha256": "76274b691b16a6c49d3f159c883398e03ccd6d1ee12d9d8ee38f4b4b98551a89"
+  },
+  "validation": {
+    "columns_present": true,
+    "no_missing_values": true,
+    "label_is_binary": true,
+    "amount_not_negative": true,
+    "time_sorted": true,
+    "fraud_rate_in_expected_range": 1.0,
+    "splits_in_time_order": true,
+    "every_split_has_fraud": true
+  },
+  "candidates": {
+    "xgb_baseline": {
+      "valid_ap": 0.7829,
+      "test_ap": 0.7681,
+      "valid": {
+        "threshold": 0.298951,
+        "alerts": 55,
+        "fraud_caught": 44,
+        "fraud_total": 57,
+        "precision": 0.8,
+        "recall": 0.772,
+        "alerts_per_10k_transactions": 9.66,
+        "fraud_amount_caught_share": 0.634
+      },
+      "test": {
+        "threshold": 0.298951,
+        "alerts": 69,
+        "fraud_caught": 55,
+        "fraud_total": 75,
+        "precision": 0.797,
+        "recall": 0.733,
+        "alerts_per_10k_transactions": 12.11,
+        "fraud_amount_caught_share": 0.525
+      },
+      "threshold": 0.298951,
+      "trees": 285,
+      "p50_ms": 107.87,
+      "p95_ms": 128.56,
+      "run_id": "5898f2e8abae4dc88ffdf739e9ece5ac",
+      "model_uri": "models:/m-b149b2a0c12e4fb8a32089450eac2928"
+    },
+    "xgb_amount_weighted": {
+      "valid_ap": 0.7792,
+      "test_ap": 0.7803,
+      "valid": {
+        "threshold": 0.326688,
+        "alerts": 52,
+        "fraud_caught": 42,
+        "fraud_total": 57,
+        "precision": 0.808,
+        "recall": 0.737,
+        "alerts_per_10k_transactions": 9.13,
+        "fraud_amount_caught_share": 0.608
+      },
+      "test": {
+        "threshold": 0.326688,
+        "alerts": 69,
+        "fraud_caught": 54,
+        "fraud_total": 75,
+        "precision": 0.783,
+        "recall": 0.72,
+        "alerts_per_10k_transactions": 12.11,
+        "fraud_amount_caught_share": 0.652
+      },
+      "threshold": 0.326688,
+      "trees": 297,
+      "p50_ms": 102.25,
+      "p95_ms": 120.27,
+      "run_id": "01e6f08196b440259811f139a3aa3a22",
+      "model_uri": "models:/m-99ea67ac1ad549dbb579f9427447ffd9"
+    }
+  },
+  "gate": {
+    "max_ap_drop": 0.01,
+    "min_valid_precision": 0.75,
+    "max_p95_ms": 20.0
+  },
+  "decisions": {
+    "xgb_baseline": {
+      "passed": false,
+      "reasons": [
+        "p95 latency 128.56 ms > 20.0"
+      ]
+    },
+    "xgb_amount_weighted": {
+      "passed": false,
+      "reasons": [
+        "p95 latency 120.27 ms > 20.0",
+        "valid fraud amount caught 0.608 < champion 0.634"
+      ]
+    }
+  },
+  "champion_before": null,
+  "champion_after": "xgb_baseline",
+  "registered_version": 1,
+  "pipeline_seconds": 519.4
+}

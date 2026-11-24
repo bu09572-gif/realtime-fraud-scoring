@@ -1,0 +1,35 @@
+# Local production-like stack:  docker compose up --build
+#   API          http://localhost:8000/docs
+#   Prometheus   http://localhost:9090      (scrapes the API every 5 s, evaluates ops/alerts.yml)
+#   Grafana      http://localhost:3000      (dashboard "Fraud scoring", anonymous viewer)
+#   replayer     streams the real test period (last 7.7 h of transactions) into the API
+services:
+  api:
+    build: .
+    image: ghcr.io/bu09572-gif/realtime-fraud-scoring:latest
+    ports: ["8000:8000"]
+    environment:
+      COST_PER_HOUR_USD: "0.0416"      # AWS t3.medium on-demand, us-east-1 (change for your machine)
+      DRIFT_EVERY: "500"
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./ops/alerts.yml:/etc/prometheus/alerts.yml:ro
+    ports: ["9090:9090"]
+    depends_on: [api]
+  grafana:
+    image: grafana/grafana:11.3.1
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+  replayer:
+    build: { context: ., dockerfile: Dockerfile.tools }
+    command: ["python", "replay.py", "--url", "http://api:8000", "--n", "0", "--rate", "50"]
+    depends_on: [api]
+    profiles: ["replay"]
