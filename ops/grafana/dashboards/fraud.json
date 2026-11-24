@@ -149,7 +149,7 @@
   {
    "id": 6,
    "type": "stat",
-   "title": "USD per 1M predictions",
+   "title": "USD per 1M predictions (at current traffic)",
    "gridPos": {
     "x": 20,
     "y": 0,
@@ -247,8 +247,8 @@
   },
   {
    "id": 9,
-   "type": "timeseries",
-   "title": "Fraud score distribution (share of traffic below each cut)",
+   "type": "bargauge",
+   "title": "Fraud score: share of last 5 min traffic at or below each cut",
    "gridPos": {
     "x": 0,
     "y": 11,
@@ -259,17 +259,30 @@
     "type": "prometheus",
     "uid": "prom"
    },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "basic",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   },
    "fieldConfig": {
     "defaults": {
-     "unit": "percentunit"
+     "unit": "percentunit",
+     "min": 0.95,
+     "max": 1,
+     "decimals": 2
     },
     "overrides": []
    },
    "targets": [
     {
      "refId": "A",
-     "expr": "sum(rate(fraud_score_bucket[5m])) by (le) / ignoring(le) group_left sum(rate(fraud_score_count[5m]))",
-     "legendFormat": "<= {{le}}"
+     "expr": "sum(increase(fraud_score_bucket{le!=\"+Inf\"}[5m])) by (le) / scalar(sum(increase(fraud_score_count[5m])))",
+     "legendFormat": "score <= {{le}}",
+     "instant": true
     }
    ]
   },

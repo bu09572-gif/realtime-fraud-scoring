@@ -46,9 +46,9 @@ jobs:
           }
           json.dump(out, open("results/stack_demo.json", "w"), indent=2); print(json.dumps(out, indent=2))
           with sync_playwright() as p:
-              b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1600, "height": 1000}, device_scale_factor=1)
-              pg.goto("http://localhost:3000/d/fraud-scoring/fraud-scoring?orgId=1&kiosk&from=now-8m&to=now")
-              pg.wait_for_timeout(8000); pg.screenshot(path="results/dashboard.png", full_page=True); b.close()
+              b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1600, "height": 1350}, device_scale_factor=1)
+              pg.goto("http://localhost:3000/d/fraud-scoring/fraud-scoring?orgId=1&from=now-8m&to=now", wait_until="networkidle")
+              pg.wait_for_timeout(10000); pg.screenshot(path="results/dashboard.png"); b.close()
           PY
       - run: docker compose logs api | tail -30
         if: always()
