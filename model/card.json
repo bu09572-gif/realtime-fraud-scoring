@@ -2,8 +2,8 @@
   "name": "fraud-xgb",
   "version": 1,
   "candidate": "xgb_baseline",
-  "run_id": "5898f2e8abae4dc88ffdf739e9ece5ac",
-  "trained_at": "2026-11-24T20:09:20Z",
+  "run_id": "645fb3740eab4a4f991aeefac68a2251",
+  "trained_at": "2026-11-24T20:29:06Z",
   "data_hash": "59ccb1829be9edf4",
   "source_sha256": "76274b691b16a6c49d3f159c883398e03ccd6d1ee12d9d8ee38f4b4b98551a89",
   "threshold": 0.298951,
@@ -62,7 +62,7 @@
       "alerts_per_10k_transactions": 12.11,
       "fraud_amount_caught_share": 0.525
     },
-    "p50_ms": 107.87,
-    "p95_ms": 128.56
+    "p50_ms": 5.17,
+    "p95_ms": 7.79
   }
 }

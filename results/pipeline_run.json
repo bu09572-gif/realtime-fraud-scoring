@@ -39,10 +39,10 @@
       },
       "threshold": 0.298951,
       "trees": 285,
-      "p50_ms": 107.87,
-      "p95_ms": 128.56,
-      "run_id": "5898f2e8abae4dc88ffdf739e9ece5ac",
-      "model_uri": "models:/m-b149b2a0c12e4fb8a32089450eac2928"
+      "p50_ms": 5.17,
+      "p95_ms": 7.79,
+      "run_id": "645fb3740eab4a4f991aeefac68a2251",
+      "model_uri": "models:/m-5d59aa1b73c54d86a8655d21852e57db"
     },
     "xgb_amount_weighted": {
       "valid_ap": 0.7792,
@@ -69,10 +69,10 @@
       },
       "threshold": 0.326688,
       "trees": 297,
-      "p50_ms": 102.25,
-      "p95_ms": 120.27,
-      "run_id": "01e6f08196b440259811f139a3aa3a22",
-      "model_uri": "models:/m-99ea67ac1ad549dbb579f9427447ffd9"
+      "p50_ms": 5.16,
+      "p95_ms": 7.99,
+      "run_id": "ab8e02eb90394f17a4b5370be538e3d9",
+      "model_uri": "models:/m-6bbda8b13b914780ac9d32ddd41d54ce"
     }
   },
   "gate": {
@@ -82,15 +82,12 @@
   },
   "decisions": {
     "xgb_baseline": {
-      "passed": false,
-      "reasons": [
-        "p95 latency 128.56 ms > 20.0"
-      ]
+      "passed": true,
+      "reasons": []
     },
     "xgb_amount_weighted": {
       "passed": false,
       "reasons": [
-        "p95 latency 120.27 ms > 20.0",
         "valid fraud amount caught 0.608 < champion 0.634"
       ]
     }
@@ -98,5 +95,5 @@
   "champion_before": null,
   "champion_after": "xgb_baseline",
   "registered_version": 1,
-  "pipeline_seconds": 519.4
+  "pipeline_seconds": 22.4
 }
